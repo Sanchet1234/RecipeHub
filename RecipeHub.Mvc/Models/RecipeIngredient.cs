@@ -11,5 +11,10 @@
         public decimal Quantity { get; set; }
 
         public string Unit { get; set; } = string.Empty;
+
+        // Navigation properties
+        public Recipe? Recipe { get; set; }
+
+        public Ingredient? Ingredient { get; set; }
     }
 }

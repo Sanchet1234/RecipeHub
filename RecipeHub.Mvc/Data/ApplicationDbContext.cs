@@ -108,13 +108,13 @@ namespace RecipeHub.Mvc.Data
                 .IsRequired();
 
             builder.Entity<RecipeIngredient>()
-                .HasOne<Recipe>()
-                .WithMany()
-                .HasForeignKey(ri => ri.RecipeId)
-                .OnDelete(DeleteBehavior.Cascade);
+    .HasOne(ri => ri.Recipe)
+    .WithMany(r => r.RecipeIngredients)
+    .HasForeignKey(ri => ri.RecipeId)
+    .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<RecipeIngredient>()
-                .HasOne<Ingredient>()
+                .HasOne(ri => ri.Ingredient)
                 .WithMany()
                 .HasForeignKey(ri => ri.IngredientId)
                 .OnDelete(DeleteBehavior.Cascade);

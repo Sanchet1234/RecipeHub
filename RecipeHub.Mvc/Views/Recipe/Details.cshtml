@@ -1,0 +1,110 @@
+@model RecipeHub.Mvc.Models.Recipe
+
+@{
+    ViewData["Title"] = "Recipe Details";
+}
+
+<h1>@Model.Title</h1>
+
+<hr />
+
+<div class="row">
+    <div class="col-md-8">
+
+        <dl class="row">
+
+            <dt class="col-sm-3">
+                Category
+            </dt>
+            <dd class="col-sm-9">
+                @Model.CategoryId
+            </dd>
+
+            <dt class="col-sm-3">
+                Description
+            </dt>
+            <dd class="col-sm-9">
+                @Model.Description
+            </dd>
+
+            <dt class="col-sm-3">
+                Preparation Time
+            </dt>
+            <dd class="col-sm-9">
+                @Model.PreparationTime minutes
+            </dd>
+
+            <dt class="col-sm-3">
+                Cooking Time
+            </dt>
+            <dd class="col-sm-9">
+                @Model.CookingTime minutes
+            </dd>
+
+            <dt class="col-sm-3">
+                Servings
+            </dt>
+            <dd class="col-sm-9">
+                @Model.Servings
+            </dd>
+
+            <dt class="col-sm-3">
+                Difficulty
+            </dt>
+            <dd class="col-sm-9">
+                @Model.Difficulty
+            </dd>
+
+            <dt class="col-sm-3">
+                Cuisine
+            </dt>
+            <dd class="col-sm-9">
+                @Model.Cuisine
+            </dd>
+
+            <dt class="col-sm-3">
+                Instructions
+            </dt>
+            <dd class="col-sm-9">
+                @Model.Instructions
+            </dd>
+
+        </dl>
+
+        <h3 class="mt-4">Ingredients</h3>
+
+        @if (Model.RecipeIngredients != null && Model.RecipeIngredients.Any())
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Ingredient</th>
+                        <th>Quantity</th>
+                        <th>Unit</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in Model.RecipeIngredients)
+                    {
+                        <tr>
+                            <td>@item.Ingredient?.Name</td>
+                            <td>@item.Quantity</td>
+                            <td>@item.Unit</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No ingredients have been added to this recipe yet.</p>
+        }
+
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.RecipeId">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
