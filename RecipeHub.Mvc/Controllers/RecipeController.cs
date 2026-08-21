@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using RecipeHub.Mvc.Models;
+using RecipeHub.Mvc.Models.ViewModels;
 using RecipeHub.Mvc.Data;
 
 public class RecipeController : Controller
@@ -14,10 +15,65 @@ public class RecipeController : Controller
         _context = context;
     }
 
-    // GET: RECIPES
-    public async Task<IActionResult> Index()    
+    // GET: RECIPES — with optional search/filter query params
+    public async Task<IActionResult> Index(
+        string? searchTitle,
+        int? categoryId,
+        string? cuisine,
+        string? difficulty)
     {
-        return View(await _context.Recipes.ToListAsync());
+        // Base query — include Category for display
+        var query = _context.Recipes
+            .Include(r => r.Category)
+            .AsQueryable();
+
+        int totalCount = await query.CountAsync();
+
+        // --- Apply filters ---
+        if (!string.IsNullOrWhiteSpace(searchTitle))
+        {
+            query = query.Where(r => r.Title.Contains(searchTitle));
+        }
+
+        if (categoryId.HasValue && categoryId > 0)
+        {
+            query = query.Where(r => r.CategoryId == categoryId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(cuisine))
+        {
+            query = query.Where(r => r.Cuisine != null && r.Cuisine.Contains(cuisine));
+        }
+
+        if (!string.IsNullOrWhiteSpace(difficulty))
+        {
+            query = query.Where(r => r.Difficulty == difficulty);
+        }
+
+        var results = await query.OrderBy(r => r.Title).ToListAsync();
+
+        // --- Build ViewModel ---
+        var availableCuisines = await _context.Recipes
+            .Where(r => r.Cuisine != null && r.Cuisine != "")
+            .Select(r => r.Cuisine!)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToListAsync();
+
+        var vm = new RecipeSearchViewModel
+        {
+            SearchTitle = searchTitle,
+            CategoryId = categoryId,
+            Cuisine = cuisine,
+            Difficulty = difficulty,
+            Results = results,
+            Categories = new SelectList(_context.Categories.OrderBy(c => c.Name), "CategoryId", "Name", categoryId),
+            AvailableCuisines = availableCuisines,
+            TotalCount = totalCount,
+            FilteredCount = results.Count
+        };
+
+        return View(vm);
     }
 
     // GET: RECIPES/Details/5
