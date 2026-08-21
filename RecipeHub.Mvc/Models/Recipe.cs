@@ -1,4 +1,4 @@
-﻿namespace RecipeHub.Mvc.Models
+namespace RecipeHub.Mvc.Models
 {
     public class Recipe
     {
@@ -31,5 +31,8 @@
         public DateTime? UpdatedDate { get; set; }
 
         public ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
+
+        // Navigation property
+        public Category? Category { get; set; }
     }
 }

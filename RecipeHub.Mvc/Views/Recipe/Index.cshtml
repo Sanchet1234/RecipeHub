@@ -1,107 +1,265 @@
-@model IEnumerable<RecipeHub.Mvc.Models.Recipe>
+@model RecipeHub.Mvc.Models.ViewModels.RecipeSearchViewModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Discover Recipes";
 }
 
-<h1>Index</h1>
+<!-- Page header -->
+<div class="recipe-discovery-header">
+    <div class="header-content">
+        <h1 class="discovery-title">
+            <span class="title-icon">🍽️</span> Discover Recipes
+        </h1>
+        <p class="discovery-subtitle">Find your next favourite dish from our collection</p>
+    </div>
+    <a asp-action="Create" class="btn btn-create" id="btn-create-recipe">
+        <span>+</span> Add Recipe
+    </a>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.UserId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CategoryId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PreparationTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CookingTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Servings)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Difficulty)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Cuisine)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Instructions)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ImageUrl)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdatedDate)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.UserId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CategoryId)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PreparationTime)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CookingTime)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Servings)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Difficulty)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Cuisine)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Instructions)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.ImageUrl)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.CreatedDate)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.UpdatedDate)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.RecipeId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.RecipeId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.RecipeId">Delete</a>
-            </td>
-        </tr>
+<!-- Search & Filter panel -->
+<form method="get" asp-action="Index" id="recipe-filter-form" class="filter-panel">
+    <!-- Search bar row -->
+    <div class="search-row">
+        <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text"
+                   id="searchTitle"
+                   name="searchTitle"
+                   value="@Model.SearchTitle"
+                   class="search-input"
+                   placeholder="Search recipes by title…"
+                   autocomplete="off" />
+            @if (!string.IsNullOrWhiteSpace(Model.SearchTitle))
+            {
+                <a href="@Url.Action("Index", new { categoryId = Model.CategoryId, cuisine = Model.Cuisine, difficulty = Model.Difficulty })"
+                   class="clear-search-btn" title="Clear search">✕</a>
+            }
+        </div>
+        <button type="submit" class="btn btn-search" id="btn-apply-filters">Search</button>
+    </div>
+
+    <!-- Filter chips row -->
+    <div class="filters-row">
+        <!-- Category -->
+        <div class="filter-group">
+            <label for="categoryId" class="filter-label">Category</label>
+            <select id="categoryId" name="categoryId" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                @if (Model.Categories != null)
+                {
+                    foreach (var cat in Model.Categories)
+                    {
+                        <option value="@cat.Value"
+                                @(cat.Value == Model.CategoryId?.ToString() ? "selected" : "")>
+                            @cat.Text
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <!-- Cuisine -->
+        <div class="filter-group">
+            <label for="cuisine" class="filter-label">Cuisine</label>
+            <select id="cuisine" name="cuisine" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Cuisines</option>
+                @foreach (var c in Model.AvailableCuisines)
+                {
+                    <option value="@c" @(c == Model.Cuisine ? "selected" : "")>@c</option>
+                }
+            </select>
+        </div>
+
+        <!-- Difficulty -->
+        <div class="filter-group">
+            <label for="difficulty" class="filter-label">Difficulty</label>
+            <select id="difficulty" name="difficulty" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Levels</option>
+                <option value="Easy" @(Model.Difficulty == "Easy" ? "selected" : "")>🟢 Easy</option>
+                <option value="Medium" @(Model.Difficulty == "Medium" ? "selected" : "")>🟡 Medium</option>
+                <option value="Hard" @(Model.Difficulty == "Hard" ? "selected" : "")>🔴 Hard</option>
+            </select>
+        </div>
+
+        <!-- Clear all filters -->
+        @if (Model.HasActiveFilters)
+        {
+            <div class="filter-group filter-group--clear">
+                <a asp-action="Index" class="btn btn-clear-filters" id="btn-clear-filters">
+                    ✕ Clear All
+                </a>
+            </div>
+        }
+    </div>
+</form>
+
+<!-- Results summary bar -->
+<div class="results-summary">
+    @if (Model.HasActiveFilters)
+    {
+        <span class="results-count">
+            Showing <strong>@Model.FilteredCount</strong> of <strong>@Model.TotalCount</strong> recipes
+        </span>
+
+        <!-- Active filter tags -->
+        <div class="active-tags">
+            @if (!string.IsNullOrWhiteSpace(Model.SearchTitle))
+            {
+                <span class="filter-tag">
+                    🔍 "@Model.SearchTitle"
+                    <a href="@Url.Action("Index", new { categoryId = Model.CategoryId, cuisine = Model.Cuisine, difficulty = Model.Difficulty })">✕</a>
+                </span>
+            }
+            @if (Model.CategoryId.HasValue && Model.CategoryId > 0)
+            {
+                <span class="filter-tag">
+                    📂 Category filter active
+                    <a href="@Url.Action("Index", new { searchTitle = Model.SearchTitle, cuisine = Model.Cuisine, difficulty = Model.Difficulty })">✕</a>
+                </span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Cuisine))
+            {
+                <span class="filter-tag">
+                    🌍 @Model.Cuisine
+                    <a href="@Url.Action("Index", new { searchTitle = Model.SearchTitle, categoryId = Model.CategoryId, difficulty = Model.Difficulty })">✕</a>
+                </span>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Difficulty))
+            {
+                <span class="filter-tag">
+                    ⚡ @Model.Difficulty
+                    <a href="@Url.Action("Index", new { searchTitle = Model.SearchTitle, categoryId = Model.CategoryId, cuisine = Model.Cuisine })">✕</a>
+                </span>
+            }
+        </div>
+    }
+    else
+    {
+        <span class="results-count">All <strong>@Model.TotalCount</strong> recipes</span>
+    }
+</div>
+
+<!-- Recipe card grid -->
+@if (Model.Results.Any())
+{
+    <div class="recipe-grid" id="recipe-grid">
+        @foreach (var recipe in Model.Results)
+        {
+            <div class="recipe-card" id="recipe-card-@recipe.RecipeId">
+                <!-- Card image -->
+                <div class="card-image-wrap">
+                    @if (!string.IsNullOrWhiteSpace(recipe.ImageUrl))
+                    {
+                        <img src="@recipe.ImageUrl"
+                             alt="@recipe.Title"
+                             class="card-image"
+                             onerror="this.parentElement.innerHTML='<div class=\'card-image-placeholder\'><span>🍴</span></div>'" />
+                    }
+                    else
+                    {
+                        <div class="card-image-placeholder">
+                            <span>🍴</span>
+                        </div>
+                    }
+
+                    <!-- Difficulty badge overlay -->
+                    <span class="badge-difficulty badge-difficulty--@recipe.Difficulty.ToLower()">
+                        @recipe.Difficulty
+                    </span>
+                </div>
+
+                <!-- Card body -->
+                <div class="card-body">
+                    <div class="card-category">
+                        @if (recipe.Category != null)
+                        {
+                            <span class="category-chip">@recipe.Category.Name</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(recipe.Cuisine))
+                        {
+                            <span class="cuisine-chip">🌍 @recipe.Cuisine</span>
+                        }
+                    </div>
+
+                    <h2 class="card-title">
+                        <a asp-action="Details" asp-route-id="@recipe.RecipeId" class="card-title-link">
+                            @recipe.Title
+                        </a>
+                    </h2>
+
+                    @if (!string.IsNullOrWhiteSpace(recipe.Description))
+                    {
+                        <p class="card-description">@recipe.Description</p>
+                    }
+
+                    <!-- Time & servings meta -->
+                    <div class="card-meta">
+                        <span class="meta-item" title="Preparation time">
+                            ⏱️ Prep: @recipe.PreparationTime min
+                        </span>
+                        <span class="meta-item" title="Cooking time">
+                            🔥 Cook: @recipe.CookingTime min
+                        </span>
+                        <span class="meta-item" title="Servings">
+                            👤 @recipe.Servings servings
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Card footer actions -->
+                <div class="card-footer-actions">
+                    <a asp-action="Details" asp-route-id="@recipe.RecipeId"
+                       class="card-action card-action--view"
+                       id="btn-view-@recipe.RecipeId">
+                        View
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@recipe.RecipeId"
+                       class="card-action card-action--edit"
+                       id="btn-edit-@recipe.RecipeId">
+                        Edit
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@recipe.RecipeId"
+                       class="card-action card-action--delete"
+                       id="btn-delete-@recipe.RecipeId">
+                        Delete
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
 }
-    </tbody>
-</table>
+else
+{
+    <!-- Empty state -->
+    <div class="empty-state" id="empty-state">
+        <div class="empty-icon">🥗</div>
+        <h2 class="empty-title">No recipes found</h2>
+        @if (Model.HasActiveFilters)
+        {
+            <p class="empty-message">
+                No recipes match your current filters. Try adjusting or
+                <a asp-action="Index">clearing your filters</a>.
+            </p>
+        }
+        else
+        {
+            <p class="empty-message">
+                There are no recipes yet.
+                <a asp-action="Create">Add the first one!</a>
+            </p>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Auto-submit on Enter in search box
+        document.getElementById('searchTitle')?.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('recipe-filter-form').submit();
+            }
+        });
+    </script>
+}
