@@ -2,6 +2,18 @@
 
 @{
     ViewData["Title"] = "Recipe Details";
+
+    var reviews = ViewBag.Reviews as List<RecipeHub.Mvc.Models.Review>
+                   ?? new List<RecipeHub.Mvc.Models.Review>();
+
+    var reviewUsers = ViewBag.ReviewUsers as Dictionary<string, string>
+                      ?? new Dictionary<string, string>();
+
+    double averageRating = ViewBag.AverageRating ?? 0.0;
+
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+    var currentUserReview = reviews.FirstOrDefault(r => r.UserId == currentUserId);
 }
 
 <h1>@Model.Title</h1>
@@ -99,6 +111,214 @@
         else
         {
             <p>No ingredients have been added to this recipe yet.</p>
+        }
+
+        <!-- REVIEWS AND RATINGS -->
+
+        <hr class="mt-5" />
+
+        <h3 class="mt-4">Reviews & Ratings</h3>
+
+        @if (reviews.Any())
+        {
+            <div class="mb-4">
+                <strong>Average Rating:</strong>
+
+                @averageRating.ToString("0.0") / 5
+
+                <span>
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= Math.Round(averageRating))
+                        {
+                            <span>⭐</span>
+                        }
+                        else
+                        {
+                            <span>☆</span>
+                        }
+                    }
+                </span>
+
+                <span class="text-muted">
+                    (@reviews.Count review@(reviews.Count == 1 ? "" : "s"))
+                </span>
+            </div>
+
+            @foreach (var review in reviews)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+
+                        <h5 class="card-title">
+                            @(reviewUsers.ContainsKey(review.UserId)
+                                ? reviewUsers[review.UserId]
+                                : "User")
+                        </h5>
+
+                        <div class="mb-2">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= review.Rating)
+                                {
+                                    <span>⭐</span>
+                                }
+                                else
+                                {
+                                    <span>☆</span>
+                                }
+                            }
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(review.Comment))
+                        {
+                            <p class="card-text">
+                                @review.Comment
+                            </p>
+                        }
+
+                        <small class="text-muted">
+                            @review.CreatedDate.ToString("dd MMM yyyy")
+                        </small>
+
+                        @if (currentUserId == review.UserId)
+                        {
+                            <div class="mt-3">
+
+                                <a asp-controller="Review"
+                                   asp-action="Edit"
+                                   asp-route-id="@review.ReviewId"
+                                   class="btn btn-sm btn-primary">
+                                    Edit
+                                </a>
+
+                                <form asp-controller="Review"
+                                      asp-action="Delete"
+                                      asp-route-id="@review.ReviewId"
+                                      method="post"
+                                      class="d-inline">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Are you sure you want to delete your review?');">
+                                        Delete
+                                    </button>
+
+                                </form>
+
+                            </div>
+                        }
+
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="text-muted">
+                No reviews yet. Be the first to review this recipe!
+            </p>
+        }
+
+        <!-- ADD REVIEW -->
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            @if (currentUserReview == null)
+            {
+                <div class="card mt-4">
+                    <div class="card-body">
+
+                        <h4>Write a Review</h4>
+
+                        @if (TempData["ReviewError"] != null)
+                        {
+                            <div class="alert alert-danger">
+                                @TempData["ReviewError"]
+                            </div>
+                        }
+
+                        @if (TempData["ReviewSuccess"] != null)
+                        {
+                            <div class="alert alert-success">
+                                @TempData["ReviewSuccess"]
+                            </div>
+                        }
+
+                        <form asp-controller="Review"
+                              asp-action="Create"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="recipeId"
+                                   value="@Model.RecipeId" />
+
+                            <div class="mb-3">
+
+                                <label for="rating"
+                                       class="form-label">
+                                    Rating
+                                </label>
+
+                                <select name="rating"
+                                        id="rating"
+                                        class="form-select"
+                                        required>
+
+                                    <option value="">Select Rating</option>
+                                    <option value="5">⭐⭐⭐⭐⭐ - 5</option>
+                                    <option value="4">⭐⭐⭐⭐ - 4</option>
+                                    <option value="3">⭐⭐⭐ - 3</option>
+                                    <option value="2">⭐⭐ - 2</option>
+                                    <option value="1">⭐ - 1</option>
+
+                                </select>
+
+                            </div>
+
+                            <div class="mb-3">
+
+                                <label for="comment"
+                                       class="form-label">
+                                    Comment
+                                </label>
+
+                                <textarea name="comment"
+                                          id="comment"
+                                          class="form-control"
+                                          rows="4"
+                                          maxlength="1000"
+                                          placeholder="Write your review here..."></textarea>
+
+                            </div>
+
+                            <button type="submit"
+                                    class="btn btn-success">
+                                Submit Review
+                            </button>
+
+                        </form>
+
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mt-4">
+                    You have already reviewed this recipe.
+                    You can edit your existing review above.
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info mt-4">
+                Please log in to submit a review or rating.
+            </div>
         }
 
     </div>
