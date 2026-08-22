@@ -77,25 +77,53 @@ public class RecipeController : Controller
     }
 
     // GET: RECIPES/Details/5
-    public async Task<IActionResult> Details(int? id)
+public async Task<IActionResult> Details(int? id)
+{
+    if (id == null)
     {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        var recipe = await _context.Recipes
-            .Include(r => r.RecipeIngredients)
-                .ThenInclude(ri => ri.Ingredient)
-            .FirstOrDefaultAsync(r => r.RecipeId == id);
-
-        if (recipe == null)
-        {
-            return NotFound();
-        }
-
-        return View(recipe);
+        return NotFound();
     }
+
+    var recipe = await _context.Recipes
+        .Include(r => r.RecipeIngredients)
+            .ThenInclude(ri => ri.Ingredient)
+        .FirstOrDefaultAsync(r => r.RecipeId == id);
+
+    if (recipe == null)
+    {
+        return NotFound();
+    }
+
+    // Get all reviews for this recipe
+    var reviews = await _context.Reviews
+        .Where(r => r.RecipeId == id)
+        .OrderByDescending(r => r.CreatedDate)
+        .ToListAsync();
+
+    // Get the users who wrote the reviews
+    var userIds = reviews
+        .Select(r => r.UserId)
+        .Distinct()
+        .ToList();
+
+    var users = await _context.Users
+        .Where(u => userIds.Contains(u.Id))
+        .ToDictionaryAsync(
+            u => u.Id,
+            u => u.UserName ?? "User"
+        );
+
+    // Calculate average rating
+    double averageRating = reviews.Any()
+        ? reviews.Average(r => r.Rating)
+        : 0;
+
+    ViewBag.Reviews = reviews;
+    ViewBag.ReviewUsers = users;
+    ViewBag.AverageRating = averageRating;
+
+    return View(recipe);
+}
 
     // GET: RECIPES/Create
     public IActionResult Create()
