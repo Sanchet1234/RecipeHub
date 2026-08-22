@@ -147,6 +147,10 @@ namespace RecipeHub.Mvc.Data
                 .Property(r => r.UserId)
                 .HasMaxLength(450)
                 .IsRequired();
+            
+            builder.Entity<Review>()
+                .HasIndex(r => new { r.UserId, r.RecipeId })
+                .IsUnique();
 
             builder.Entity<Review>()
                 .Property(r => r.Comment)
